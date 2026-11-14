@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>สถิติการมาเรียน - โรงเรียนวัดสีสุก</title>
+  
+  <!-- PWA & Add to Home Screen Settings (iOS / Android) -->
+  <meta name="application-name" content="สถิติมาเรียน วัดสีสุก">
+  <meta name="apple-mobile-web-app-title" content="สถิติมาเรียน">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f97316">
+
+  <!-- App Icons (ใช้โลโก้โรงเรียนวัดสีสุก) -->
+  <link rel="icon" type="image/jpeg" href="https://img2.pic.in.th/Logob40230077c4b7449.jpg">
+  <link rel="apple-touch-icon" href="https://img2.pic.in.th/Logob40230077c4b7449.jpg">
+  <link id="dynamic-manifest" rel="manifest" href="">
+
+  <!-- Google Fonts: Sarabun & Prompt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- Lucide Icons (Flat Minimal Style) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    // สร้าง Web App Manifest แบบ Inline เพื่อรองรับ Add to Home Screen บน Android/Chrome โดยไม่ต้องมีไฟล์เสริม
+    (function() {
+      const manifest = {
+        name: "สถิติการมาเรียน โรงเรียนวัดสีสุก",
+        short_name: "สถิติมาเรียน",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#FFFBF7",
+        theme_color: "#f97316",
+        icons: [
+          {
+            src: "https://img2.pic.in.th/Logob40230077c4b7449.jpg",
+            sizes: "192x192",
+            type: "image/jpeg"
+          },
+          {
+            src: "https://img2.pic.in.th/Logob40230077c4b7449.jpg",
+            sizes: "512x512",
+            type: "image/jpeg"
+          }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      document.getElementById('dynamic-manifest').setAttribute('href', URL.createObjectURL(blob));
+    })();
+
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'Sarabun', 'sans-serif'],
+            sarabun: ['Sarabun', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ป้องกันหน้าจอล้นด้านกว้างบนมือถือ แต่เลื่อนแนวตั้งได้ปกติ */
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background-color: #FFFBF7;
+      color: #334155;
+      font-family: 'Prompt', 'Sarabun', sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    .card-hover {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @media (hover: hover) {
+      .card-hover:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px -8px rgba(249, 115, 22, 0.18);
+      }
+    }
+    .btn-transition {
+      transition: all 0.2s ease;
+    }
+    .btn-transition:active {
+      transform: scale(0.97);
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #fff7ed; }
+    ::-webkit-scrollbar-thumb { background: #fdba74; border-radius: 999px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col w-full">
+
+  <!-- TOP NAVIGATION / HEADER -->
+  <header class="bg-white/95 backdrop-blur-md border-b border-orange-100 sticky top-0 z-30 shadow-sm w-full">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
+      
+      <!-- แถวบน: โลโก้ + ชื่อโรงเรียน + เวลา -->
+      <div class="flex items-center justify-between gap-2 w-full md:w-auto">
+        <div class="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer min-w-0" onclick="switchView('dashboard')">
+          <img src="https://img2.pic.in.th/Logob40230077c4b7449.jpg" alt="โลโก้โรงเรียนวัดสีสุก" 
+               class="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl object-cover border-2 border-orange-200 shadow-sm shrink-0">
+          <div class="min-w-0">
+            <span class="inline-block bg-orange-100 text-orange-600 text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-full truncate max-w-full">
+              เทอม <span id="hdr-term">-</span> / ปี <span id="hdr-year">-</span>
+            </span>
+            <h1 class="text-base sm:text-xl md:text-2xl font-bold text-slate-800 tracking-tight leading-tight truncate">
+              สถิติการมาเรียน
+            </h1>
+            <p class="text-xs sm:text-sm text-orange-600 font-medium truncate">โรงเรียนวัดสีสุก</p>
+          </div>
+        </div>
+
+        <!-- นาฬิกาแสดงบนมือถือมุมขวาบน -->
+        <div class="flex md:hidden items-center gap-1 text-[11px] text-slate-600 bg-orange-50 px-2 py-1.5 rounded-xl border border-orange-100 shrink-0 text-right leading-tight">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-orange-500 shrink-0"></i>
+          <span id="live-datetime-mobile" class="font-medium">กำลังโหลด...</span>
+        </div>
+      </div>
+
+      <!-- แถวล่าง: นาฬิกา (Desktop) + ปุ่มเมนู 3 ปุ่ม -->
+      <div class="flex flex-col md:items-end gap-2 w-full md:w-auto">
+        <div class="hidden md:flex items-center gap-1.5 text-sm text-slate-600 bg-orange-50/80 px-3 py-1.5 rounded-xl border border-orange-100">
+          <i data-lucide="clock" class="w-4 h-4 text-orange-500"></i>
+          <span id="live-datetime" class="font-medium">กำลังโหลดเวลา...</span>
+        </div>
+        
+        <div class="grid grid-cols-3 md:flex items-center gap-1.5 sm:gap-2 w-full md:w-auto">
+          <button onclick="switchView('dashboard')" id="nav-dashboard"
+            class="btn-transition flex items-center justify-center gap-1 px-2 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-orange-500 text-white shadow-sm hover:bg-orange-600">
+            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"></i>
+            <span class="truncate">หน้าแรก</span>
+          </button>
+          <button onclick="openTeacherPortal()" id="nav-teacher"
+            class="btn-transition flex items-center justify-center gap-1 px-2 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">
+            <i data-lucide="user-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"></i>
+            <span class="truncate">ระบบครู</span>
+          </button>
+          <button onclick="openAdminLogin()" id="nav-admin"
+            class="btn-transition flex items-center justify-center gap-1 px-2 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-800 text-white hover:bg-slate-700">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"></i>
+            <span class="truncate">แอดมิน</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-grow max-w-6xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-6">
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 1: DASHBOARD (หน้าแรก) -->
+    <!-- ===================================================================== -->
+    <section id="view-dashboard" class="space-y-4 sm:space-y-6">
+      
+      <!-- Date Filter Bar -->
+      <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-orange-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 sm:p-2.5 bg-orange-100 text-orange-600 rounded-xl shrink-0">
+            <i data-lucide="calendar-days" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="font-semibold text-slate-800 text-sm sm:text-base">ข้อมูลสถิติประจำวัน</h2>
+            <p class="text-[11px] sm:text-xs text-slate-500">อัปเดตอัตโนมัติทันทีเมื่อครูบันทึกข้อมูล</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <input type="date" id="dashboard-date" onchange="loadDashboard(this.value)"
+            class="flex-1 sm:flex-initial px-3 py-2 rounded-xl border border-orange-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50/30">
+          <button onclick="loadDashboard(document.getElementById('dashboard-date').value)" 
+            class="btn-transition p-2.5 bg-orange-100 text-orange-600 rounded-xl hover:bg-orange-200 shrink-0" title="รีเฟรชข้อมูล">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3 Main Stat Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+        
+        <!-- Card 1: จำนวนนักเรียนทั้งหมด -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-orange-100 shadow-sm card-hover relative overflow-hidden">
+          <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-50 rounded-full pointer-events-none"></div>
+          <div class="flex items-center gap-3 mb-3 sm:mb-4 relative">
+            <div class="p-2.5 sm:p-3 bg-orange-100 text-orange-600 rounded-2xl shrink-0">
+              <i data-lucide="users" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+            </div>
+            <h3 class="font-semibold text-slate-700 text-base sm:text-lg">จำนวนนักเรียนทั้งหมด</h3>
+          </div>
+          <div class="text-3xl sm:text-4xl font-bold text-slate-800 mb-3 sm:mb-4">
+            <span id="stat-total-all">0</span> <span class="text-sm sm:text-base font-normal text-slate-500">คน</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-3 border-t border-orange-50 text-xs sm:text-sm">
+            <div class="bg-blue-50/70 text-blue-700 px-3 py-2 rounded-xl flex items-center justify-between">
+              <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> ชาย</span>
+              <span class="font-bold" id="stat-total-male">0</span>
+            </div>
+            <div class="bg-pink-50/70 text-pink-700 px-3 py-2 rounded-xl flex items-center justify-between">
+              <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> หญิง</span>
+              <span class="font-bold" id="stat-total-female">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: จำนวนนักเรียนที่มาเรียน -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-emerald-100 shadow-sm card-hover relative overflow-hidden">
+          <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full pointer-events-none"></div>
+          <div class="flex items-center gap-3 mb-3 sm:mb-4 relative">
+            <div class="p-2.5 sm:p-3 bg-emerald-100 text-emerald-600 rounded-2xl shrink-0">
+              <i data-lucide="user-check" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+            </div>
+            <h3 class="font-semibold text-slate-700 text-base sm:text-lg">จำนวนนักเรียนที่มาเรียน</h3>
+          </div>
+          <div class="flex items-baseline justify-between gap-2 mb-3 sm:mb-4">
+            <div class="text-3xl sm:text-4xl font-bold text-emerald-600">
+              <span id="stat-present-all">0</span> <span class="text-sm sm:text-base font-normal text-slate-500">คน</span>
+            </div>
+            <div class="bg-rose-50 text-rose-600 px-2.5 py-1 rounded-xl text-xs font-semibold shrink-0">
+              ไม่มาเรียน: <span id="stat-absent">0</span> คน
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-3 border-t border-emerald-50 text-xs sm:text-sm">
+            <div class="bg-emerald-50/60 text-emerald-700 px-3 py-2 rounded-xl flex items-center justify-between">
+              <span>ชายมา</span>
+              <span class="font-bold" id="stat-present-male">0</span>
+            </div>
+            <div class="bg-teal-50/60 text-teal-700 px-3 py-2 rounded-xl flex items-center justify-between">
+              <span>หญิงมา</span>
+              <span class="font-bold" id="stat-present-female">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: เปอร์เซ็นต์การมาเรียน -->
+        <div class="bg-gradient-to-br from-orange-500 to-amber-500 rounded-3xl p-5 sm:p-6 text-white shadow-md card-hover relative overflow-hidden">
+          <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full pointer-events-none"></div>
+          <div class="flex items-center gap-3 mb-3 sm:mb-4">
+            <div class="p-2.5 sm:p-3 bg-white/20 rounded-2xl backdrop-blur-sm shrink-0">
+              <i data-lucide="pie-chart" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
+            </div>
+            <h3 class="font-semibold text-base sm:text-lg">เปอร์เซ็นต์การมาเรียน</h3>
+          </div>
+          <div class="text-4xl sm:text-5xl font-bold mb-3 sm:mb-4 tracking-tight">
+            <span id="stat-percentage">0.00</span><span class="text-xl sm:text-2xl ml-1">%</span>
+          </div>
+          <div class="w-full bg-black/20 rounded-full h-2.5 mb-2 overflow-hidden">
+            <div id="stat-progress-bar" class="bg-white h-2.5 rounded-full transition-all duration-700" style="width: 0%"></div>
+          </div>
+          <p class="text-[11px] sm:text-xs text-orange-100">คำนวณจากสัดส่วนนักเรียนที่มาเรียนต่อยอดทั้งหมด</p>
+        </div>
+
+      </div>
+
+      <!-- Missing Rooms Alert Box on Dashboard -->
+      <div class="bg-white rounded-3xl p-4 sm:p-6 border border-orange-100 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-amber-100 text-amber-600 rounded-xl shrink-0">
+              <i data-lucide="bell-ring" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+            </div>
+            <h3 class="font-semibold text-slate-800 text-sm sm:text-base">สถานะการส่งข้อมูลรายห้อง</h3>
+          </div>
+          <span id="missing-badge" class="text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-100 text-orange-700">
+            กำลังตรวจสอบ...
+          </span>
+        </div>
+        <div id="dashboard-missing-list" class="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
+          <!-- Render via JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 2: TEACHER PORTAL (ระบบครู) -->
+    <!-- ===================================================================== -->
+    <section id="view-teacher" class="hidden space-y-5">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 sm:p-3 bg-amber-100 text-amber-600 rounded-2xl shrink-0">
+          <i data-lucide="graduation-cap" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </div>
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-slate-800">ระบบบันทึกการมาเรียน (สำหรับครู)</h2>
+          <p class="text-xs text-slate-500">บันทึกจำนวนนักเรียนที่มาเรียน หรือแก้ไขยอดนักเรียนของห้อง</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Form Card -->
+        <div class="lg:col-span-2 bg-white rounded-3xl p-4 sm:p-6 border border-orange-100 shadow-sm">
+          <form onsubmit="submitTeacherAttendance(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div>
+                <label class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                  <i data-lucide="calendar" class="w-3.5 h-3.5 inline text-orange-500 mr-1"></i>วันที่เช็คชื่อ
+                </label>
+                <input type="date" id="t-date" required
+                  class="w-full px-3 py-2.5 rounded-xl border border-orange-200 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none">
+              </div>
+              <div class="grid grid-cols-2 sm:col-span-2 gap-3">
+                <div>
+                  <label class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    <i data-lucide="layers" class="w-3.5 h-3.5 inline text-orange-500 mr-1"></i>ชั้นเรียน
+                  </label>
+                  <select id="t-grade" onchange="updateTeacherRoomHint()" required
+                    class="w-full px-3 py-2.5 rounded-xl border border-orange-200 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-white">
+                    <option value="อ.1">อ.1</option>
+                    <option value="อ.2">อ.2</option>
+                    <option value="อ.3">อ.3</option>
+                    <option value="ป.1">ป.1</option>
+                    <option value="ป.2">ป.2</option>
+                    <option value="ป.3">ป.3</option>
+                    <option value="ป.4">ป.4</option>
+                    <option value="ป.5">ป.5</option>
+                    <option value="ป.6">ป.6</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    <i data-lucide="door-open" class="w-3.5 h-3.5 inline text-orange-500 mr-1"></i>ห้องเรียน
+                  </label>
+                  <select id="t-room" onchange="updateTeacherRoomHint()" required
+                    class="w-full px-3 py-2.5 rounded-xl border border-orange-200 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-white">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Room Quota Hint + ปุ่มแก้ไขยอดนักเรียนของห้อง -->
+            <div id="t-room-quota" class="bg-orange-50 border border-orange-200 rounded-2xl p-3 text-xs sm:text-sm text-orange-800 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4 text-orange-500 shrink-0"></i>
+                <span>กำลังตรวจสอบยอดนักเรียนทั้งหมดของห้องนี้...</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 sm:gap-4 pt-1">
+              <div class="bg-blue-50/40 p-3 sm:p-4 rounded-2xl border border-blue-100">
+                <label class="block text-xs sm:text-sm font-semibold text-blue-800 mb-1.5">
+                  <i data-lucide="user" class="w-3.5 h-3.5 inline mr-1"></i>ชาย “มาเรียน”
+                </label>
+                <input type="number" id="t-male" min="0" required placeholder="0"
+                  class="w-full px-3 py-2.5 text-base sm:text-lg font-bold rounded-xl border border-blue-200 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+              </div>
+              <div class="bg-pink-50/40 p-3 sm:p-4 rounded-2xl border border-pink-100">
+                <label class="block text-xs sm:text-sm font-semibold text-pink-800 mb-1.5">
+                  <i data-lucide="user" class="w-3.5 h-3.5 inline mr-1"></i>หญิง “มาเรียน”
+                </label>
+                <input type="number" id="t-female" min="0" required placeholder="0"
+                  class="w-full px-3 py-2.5 text-base sm:text-lg font-bold rounded-xl border border-pink-200 focus:ring-2 focus:ring-pink-400 focus:outline-none">
+              </div>
+            </div>
+
+            <button type="submit"
+              class="btn-transition w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white text-sm sm:text-base font-semibold rounded-2xl shadow-md flex items-center justify-center gap-2">
+              <i data-lucide="save" class="w-5 h-5"></i>
+              <span>บันทึกข้อมูลการมาเรียน</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Missing Rooms Alert Panel for Teacher -->
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-orange-100 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="p-2 bg-rose-100 text-rose-600 rounded-xl shrink-0">
+              <i data-lucide="alert-circle" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+            </div>
+            <h3 class="font-semibold text-slate-800 text-sm sm:text-base">ห้องที่ยังไม่ลงข้อมูล</h3>
+          </div>
+          <p class="text-xs text-slate-500 mb-3">รายการห้องเรียนที่ยังไม่ได้ส่งสถิติวันนี้</p>
+          <div id="teacher-missing-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+            <!-- Render via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared Summary Report Section -->
+      <div id="teacher-report-container"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 3: ADMIN PORTAL (ระบบแอดมิน) -->
+    <!-- ===================================================================== -->
+    <section id="view-admin" class="hidden space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 sm:p-3 bg-slate-800 text-orange-400 rounded-2xl shrink-0">
+            <i data-lucide="shield" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+          </div>
+          <div>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-800">ระบบจัดการข้อมูลแอดมิน</h2>
+            <p class="text-xs text-slate-500">ตั้งค่าปีการศึกษา จัดการจำนวนนักเรียน และส่งออกรายงาน</p>
+          </div>
+        </div>
+        <button onclick="logoutAdmin()" class="btn-transition px-3.5 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5">
+          <i data-lucide="log-out" class="w-4 h-4"></i> ออกจากระบบ
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        <!-- 1. ตั้งค่าภาคเรียนและปีการศึกษา -->
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-orange-100 shadow-sm space-y-3">
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-orange-100 text-orange-600 rounded-xl shrink-0">
+              <i data-lucide="settings" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+            </div>
+            <h3 class="font-semibold text-slate-800 text-sm sm:text-base">ตั้งค่าภาคเรียน / ปีการศึกษา</h3>
+          </div>
+          <form onsubmit="submitSystemSettings(event)" class="space-y-3">
+            <div>
+              <label class="block text-xs sm:text-sm text-slate-600 mb-1">ภาคเรียน</label>
+              <select id="adm-term" class="w-full px-3 py-2.5 rounded-xl border border-orange-200 bg-white text-sm">
+                <option value="1">ภาคเรียนที่ 1</option>
+                <option value="2">ภาคเรียนที่ 2</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs sm:text-sm text-slate-600 mb-1">ปีการศึกษา (พ.ศ.)</label>
+              <input type="text" id="adm-year" placeholder="เช่น 2569" required
+                class="w-full px-3 py-2.5 rounded-xl border border-orange-200 text-sm">
+            </div>
+            <button type="submit" class="btn-transition w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium">
+              บันทึกการตั้งค่า
+            </button>
+          </form>
+        </div>
+
+        <!-- 2. เพิ่ม/แก้ไข จำนวนนักเรียนรายห้อง -->
+        <div class="lg:col-span-2 bg-white rounded-3xl p-4 sm:p-6 border border-orange-100 shadow-sm space-y-4">
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-orange-100 text-orange-600 rounded-xl shrink-0">
+              <i data-lucide="user-plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+            </div>
+            <h3 class="font-semibold text-slate-800 text-sm sm:text-base">เพิ่ม / แก้ไขข้อมูลนักเรียนแต่ละห้องเรียน</h3>
+          </div>
+          
+          <form onsubmit="submitClassroomData(event)" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 items-end">
+            <div>
+              <label class="block text-xs text-slate-600 mb-1">ชั้นเรียน</label>
+              <select id="adm-grade" class="w-full px-3 py-2.5 rounded-xl border border-orange-200 bg-white text-sm">
+                <option value="อ.1">อ.1</option>
+                <option value="อ.2">อ.2</option>
+                <option value="อ.3">อ.3</option>
+                <option value="ป.1">ป.1</option>
+                <option value="ป.2">ป.2</option>
+                <option value="ป.3">ป.3</option>
+                <option value="ป.4">ป.4</option>
+                <option value="ป.5">ป.5</option>
+                <option value="ป.6">ป.6</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-600 mb-1">ห้องเรียน</label>
+              <select id="adm-room" class="w-full px-3 py-2.5 rounded-xl border border-orange-200 bg-white text-sm">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-600 mb-1">นักเรียนชาย</label>
+              <input type="number" id="adm-male" min="0" required placeholder="0"
+                class="w-full px-3 py-2.5 rounded-xl border border-orange-200 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-600 mb-1">นักเรียนหญิง</label>
+              <input type="number" id="adm-female" min="0" required placeholder="0"
+                class="w-full px-3 py-2.5 rounded-xl border border-orange-200 text-sm">
+            </div>
+            <button type="submit" class="col-span-2 sm:col-span-1 btn-transition py-2.5 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-semibold">
+              บันทึกห้อง
+            </button>
+          </form>
+
+          <!-- ตารางรายชื่อห้องที่ตั้งค่าแล้ว -->
+          <div class="overflow-x-auto max-h-52 border border-orange-100 rounded-2xl">
+            <table class="w-full text-xs sm:text-sm text-left">
+              <thead class="bg-orange-50 text-orange-800 sticky top-0">
+                <tr>
+                  <th class="py-2.5 px-3">ชั้น/ห้อง</th>
+                  <th class="py-2.5 px-2 text-center">ชาย</th>
+                  <th class="py-2.5 px-2 text-center">หญิง</th>
+                  <th class="py-2.5 px-2 text-center">รวม</th>
+                  <th class="py-2.5 px-3 text-right">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="adm-classroom-table" class="divide-y divide-orange-50">
+                <!-- Render via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Missing Rooms Alert for Admin -->
+      <div class="bg-white rounded-3xl p-4 sm:p-6 border border-orange-100 shadow-sm">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="p-2 bg-amber-100 text-amber-600 rounded-xl shrink-0">
+            <i data-lucide="bell" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          </div>
+          <h3 class="font-semibold text-slate-800 text-sm sm:text-base">แจ้งเตือนห้องเรียนที่ยังไม่ลงข้อมูล (วันนี้)</h3>
+        </div>
+        <div id="admin-missing-list" class="flex flex-wrap gap-1.5 sm:gap-2"></div>
+      </div>
+
+      <!-- Admin Report & Export Container -->
+      <div id="admin-report-container"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- REUSABLE REPORT & EXPORT TEMPLATE -->
+    <!-- ===================================================================== -->
+    <div id="shared-report-template" class="hidden">
+      <div class="bg-white rounded-3xl p-4 sm:p-6 border border-orange-100 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-orange-100 pb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="p-2 bg-orange-100 text-orange-600 rounded-xl shrink-0">
+              <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base sm:text-lg">สรุปข้อมูลสถิติการมาเรียน</h3>
+              <p class="text-[11px] sm:text-xs text-slate-500">เลือกดูรายงานแบบรายวัน รายเดือน หรือรายปี</p>
+            </div>
+          </div>
+
+          <!-- Export Buttons (Visible only in Admin) -->
+          <div id="export-buttons-group" class="hidden grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto">
+            <button onclick="exportReport('pdf')" class="btn-transition flex items-center justify-center gap-1.5 px-3 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm">
+              <i data-lucide="file-text" class="w-4 h-4 shrink-0"></i> <span>PDF แนวตั้ง</span>
+            </button>
+            <button onclick="exportReport('docs')" class="btn-transition flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4 shrink-0"></i> <span>Google Docs</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Report Filter Controls -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2.5">
+          <div class="grid grid-cols-3 sm:inline-flex bg-orange-50 p-1 rounded-xl border border-orange-100 w-full sm:w-auto">
+            <button type="button" onclick="setReportType('daily')" id="rep-tab-daily" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-orange-500 text-white">รายวัน</button>
+            <button type="button" onclick="setReportType('monthly')" id="rep-tab-monthly" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-orange-600">รายเดือน</button>
+            <button type="button" onclick="setReportType('yearly')" id="rep-tab-yearly" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-orange-600">รายปี</button>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <div id="rep-filter-input-box" class="flex-1 sm:flex-initial">
+              <input type="date" id="rep-filter-daily" onchange="fetchReportData()" class="w-full px-3 py-2 rounded-xl border border-orange-200 text-xs sm:text-sm">
+              <input type="month" id="rep-filter-monthly" onchange="fetchReportData()" class="hidden w-full px-3 py-2 rounded-xl border border-orange-200 text-xs sm:text-sm">
+              <input type="text" id="rep-filter-yearly" onchange="fetchReportData()" placeholder="ปีการศึกษา เช่น 2569" class="hidden w-full px-3 py-2 rounded-xl border border-orange-200 text-xs sm:text-sm sm:w-40">
+            </div>
+
+            <button onclick="fetchReportData()" class="btn-transition px-3.5 py-2 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-xl text-xs sm:text-sm font-medium shrink-0">
+              แสดงข้อมูล
+            </button>
+          </div>
+        </div>
+
+        <!-- Report Table -->
+        <div class="w-full overflow-x-auto border border-orange-100 rounded-2xl">
+          <table class="w-full text-xs sm:text-sm text-left whitespace-nowrap">
+            <thead class="bg-orange-500 text-white">
+              <tr>
+                <th class="py-2.5 px-3">รายการ / ชั้นเรียน</th>
+                <th class="py-2.5 px-2.5 text-center">ทั้งหมด</th>
+                <th class="py-2.5 px-2.5 text-center">ชาย(มา)</th>
+                <th class="py-2.5 px-2.5 text-center">หญิง(มา)</th>
+                <th class="py-2.5 px-2.5 text-center">รวมมา</th>
+                <th class="py-2.5 px-2.5 text-center">ไม่มา</th>
+                <th class="py-2.5 px-3 text-center">ร้อยละ</th>
+              </tr>
+            </thead>
+            <tbody id="report-table-body" class="divide-y divide-orange-50">
+              <tr><td colspan="7" class="py-6 text-center text-slate-400">กำลังโหลดข้อมูลรายงาน...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-orange-100 py-4 text-center text-xs text-slate-400 mt-8">
+    ระบบเช็คชื่อสถิติรายวัน • โรงเรียนวัดสีสุก
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT LOGIC (STANDALONE HOSTING READY: GITHUB PAGES / VERCEL) -->
+  <!-- ===================================================================== -->
+  <script>
+    // กำหนด URL ของ Google Apps Script Web App API แบบตรงๆ สำหรับโฮสต์ภายนอก
+    const API_URL = "https://script.google.com/macros/s/AKfycbxeE8v4vkTkMG0nJW2icfG5X6jPD06smOEknyIAetu0PQ-cZrv5s46RLsKetew-Lpll/exec";
+
+    let appState = {
+      isAdmin: false,
+      classrooms: [],
+      settings: { term: '2', academicYear: '2569' },
+      reportType: 'daily'
+    };
+
+    // -----------------------------------------------------------------------
+    // 1. API CLIENT (ส่งข้อมูลแบบ JSON string ผ่าน contentType: text/plain)
+    // -----------------------------------------------------------------------
+    async function callApi(action, payload = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify({ action, payload })
+        });
+        const json = await response.json();
+        if (json.status === 'error') {
+          throw new Error(json.message);
+        }
+        return json.data;
+      } catch (err) {
+        console.error("API Error:", err);
+        throw err;
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 2. LIVE THAI DATE & CLOCK
+    // -----------------------------------------------------------------------
+    function startThaiClock() {
+      const months = [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+      ];
+      const shortMonths = [
+        "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+        "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+      ];
+      function update() {
+        const now = new Date();
+        const day = now.getDate();
+        const month = months[now.getMonth()];
+        const sMonth = shortMonths[now.getMonth()];
+        const year = now.getFullYear() + 543;
+        const time = now.toTimeString().split(' ')[0];
+
+        const desktopEl = document.getElementById('live-datetime');
+        const mobileEl = document.getElementById('live-datetime-mobile');
+        if (desktopEl) desktopEl.textContent = `${day} ${month} ${year} เวลา ${time}`;
+        if (mobileEl) mobileEl.innerHTML = `${day} ${sMonth} ${year}<br>${time}`;
+      }
+      update();
+      setInterval(update, 1000);
+    }
+
+    function getTodayISO() {
+      const now = new Date();
+      const offset = now.getTimezoneOffset() * 60000;
+      return new Date(now - offset).toISOString().split('T')[0];
+    }
+
+    // -----------------------------------------------------------------------
+    // 3. INITIALIZATION & DASHBOARD
+    // -----------------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      startThaiClock();
+
+      const today = getTodayISO();
+      document.getElementById('dashboard-date').value = today;
+      document.getElementById('t-date').value = today;
+      document.getElementById('rep-filter-daily').value = today;
+      document.getElementById('rep-filter-monthly').value = today.substring(0, 7);
+
+      loadDashboard(today);
+    });
+
+    async function loadDashboard(dateStr) {
+      try {
+        const data = await callApi('getDashboard', { date: dateStr });
+        appState.classrooms = data.classrooms || [];
+        appState.settings = data.settings || { term: '2', academicYear: '2569' };
+
+        // Update Header
+        document.getElementById('hdr-term').textContent = appState.settings.term;
+        document.getElementById('hdr-year').textContent = appState.settings.academicYear;
+        document.getElementById('adm-term').value = appState.settings.term;
+        document.getElementById('adm-year').value = appState.settings.academicYear;
+        document.getElementById('rep-filter-yearly').value = appState.settings.academicYear;
+
+        // Update Stat Cards
+        document.getElementById('stat-total-all').textContent = data.stats.totalStudents.toLocaleString();
+        document.getElementById('stat-total-male').textContent = data.stats.totalMale.toLocaleString();
+        document.getElementById('stat-total-female').textContent = data.stats.totalFemale.toLocaleString();
+
+        document.getElementById('stat-present-all').textContent = data.stats.totalPresent.toLocaleString();
+        document.getElementById('stat-present-male').textContent = data.stats.presentMale.toLocaleString();
+        document.getElementById('stat-present-female').textContent = data.stats.presentFemale.toLocaleString();
+        document.getElementById('stat-absent').textContent = data.stats.absent.toLocaleString();
+
+        document.getElementById('stat-percentage').textContent = data.stats.percentage;
+        document.getElementById('stat-progress-bar').style.width = `${Math.min(100, data.stats.percentage)}%`;
+
+        // Render Missing Rooms
+        renderMissingRooms(data.missingRooms);
+        renderAdminClassroomTable();
+        updateTeacherRoomHint();
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', text: err.message, confirmButtonColor: '#f97316' });
+      }
+    }
+
+    function renderMissingRooms(missing) {
+      const dashContainer = document.getElementById('dashboard-missing-list');
+      const teacherContainer = document.getElementById('teacher-missing-list');
+      const adminContainer = document.getElementById('admin-missing-list');
+      const badge = document.getElementById('missing-badge');
+
+      if (!missing || missing.length === 0) {
+        badge.className = "text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700";
+        badge.textContent = "ส่งครบทุกห้องแล้ว";
+        const okHtml = `<span class="text-xs sm:text-sm text-emerald-600 font-medium flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-4 h-4 shrink-0"></i> ทุกห้องเรียนบันทึกสถิติเรียบร้อยแล้ว</span>`;
+        dashContainer.innerHTML = okHtml;
+        teacherContainer.innerHTML = okHtml;
+        adminContainer.innerHTML = okHtml;
+      } else {
+        badge.className = "text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700";
+        badge.textContent = `ยังไม่ลงข้อมูล ${missing.length} ห้อง`;
+        const pills = missing.map(r => 
+          `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-medium">
+            <i data-lucide="clock" class="w-3 h-3"></i> ${r}
+          </span>`
+        ).join('');
+        dashContainer.innerHTML = pills;
+        adminContainer.innerHTML = pills;
+        teacherContainer.innerHTML = missing.map(r => 
+          `<div class="flex items-center justify-between p-2.5 rounded-xl bg-rose-50/70 border border-rose-100 text-xs text-rose-700 font-medium">
+            <span>${r}</span>
+            <span class="px-2 py-0.5 bg-white rounded-md text-[11px]">รอข้อมูล</span>
+          </div>`
+        ).join('');
+      }
+      lucide.createIcons();
+    }
+
+    // -----------------------------------------------------------------------
+    // 4. VIEW SWITCHING & NAVIGATION
+    // -----------------------------------------------------------------------
+    function switchView(viewName) {
+      ['dashboard', 'teacher', 'admin'].forEach(v => {
+        document.getElementById(`view-${v}`).classList.add('hidden');
+      });
+      document.getElementById(`view-${viewName}`).classList.remove('hidden');
+
+      const reportBox = document.getElementById('shared-report-template');
+      const exportBtns = document.getElementById('export-buttons-group');
+
+      if (viewName === 'teacher') {
+        reportBox.classList.remove('hidden');
+        exportBtns.classList.add('hidden');
+        document.getElementById('teacher-report-container').appendChild(reportBox);
+        fetchReportData();
+      } else if (viewName === 'admin') {
+        reportBox.classList.remove('hidden');
+        exportBtns.classList.remove('hidden');
+        document.getElementById('admin-report-container').appendChild(reportBox);
+        fetchReportData();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      lucide.createIcons();
+    }
+
+    function openTeacherPortal() {
+      switchView('teacher');
+      updateTeacherRoomHint();
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. TEACHER ACTIONS (บันทึกมาเรียน + เพิ่ม/แก้ไขยอดนักเรียนของห้อง)
+    // -----------------------------------------------------------------------
+    function updateTeacherRoomHint() {
+      const grade = document.getElementById('t-grade').value;
+      const room = document.getElementById('t-room').value;
+      const hintBox = document.getElementById('t-room-quota');
+
+      const found = appState.classrooms.find(c => c.grade === grade && c.room === room);
+      if (found) {
+        hintBox.className = "bg-orange-50 border border-orange-200 rounded-2xl p-3 text-xs sm:text-sm text-orange-800 flex flex-wrap items-center justify-between gap-2";
+        hintBox.innerHTML = `
+          <div class="flex items-center gap-2">
+            <i data-lucide="users" class="w-4 h-4 text-orange-500 shrink-0"></i>
+            <span>ยอดเต็ม <b>${grade}ห้อง${room}</b> : ชาย <b>${found.totalMale}</b> | หญิง <b>${found.totalFemale}</b> (รวม <b>${found.totalStudents}</b>)</span>
+          </div>
+          <button type="button" onclick="openTeacherEditQuota()"
+            class="btn-transition px-2.5 py-1.5 bg-white hover:bg-orange-100 text-orange-600 border border-orange-300 rounded-xl text-xs font-semibold flex items-center gap-1 shadow-sm ml-auto sm:ml-0">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> แก้ไขยอดนักเรียน
+          </button>`;
+      } else {
+        hintBox.className = "bg-rose-50 border border-rose-200 rounded-2xl p-3 text-xs sm:text-sm text-rose-700 flex flex-wrap items-center justify-between gap-2";
+        hintBox.innerHTML = `
+          <div class="flex items-center gap-2">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 shrink-0"></i>
+            <span>ยังไม่มียอดนักเรียน <b>${grade}ห้อง${room}</b> ในระบบ</span>
+          </div>
+          <button type="button" onclick="openTeacherEditQuota()"
+            class="btn-transition px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1 shadow-sm ml-auto sm:ml-0">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> เพิ่มยอดนักเรียน
+          </button>`;
+      }
+      lucide.createIcons();
+    }
+
+    async function openTeacherEditQuota() {
+      const grade = document.getElementById('t-grade').value;
+      const room = document.getElementById('t-room').value;
+      const found = appState.classrooms.find(c => c.grade === grade && c.room === room);
+
+      const currentMale = found ? found.totalMale : '';
+      const currentFemale = found ? found.totalFemale : '';
+
+      const { value: formValues } = await Swal.fire({
+        title: `ยอดนักเรียน ${grade}ห้อง${room}`,
+        html: `
+          <p class="text-xs text-slate-500 mb-3">ระบุจำนวนนักเรียนทั้งหมดในทะเบียนของห้องนี้</p>
+          <div class="grid grid-cols-2 gap-3 text-left">
+            <div>
+              <label class="text-xs font-semibold text-blue-700">ชายทั้งหมด (คน)</label>
+              <input id="swal-t-male" type="number" min="0" value="${currentMale}" placeholder="0" class="swal2-input !m-0 !mt-1 !w-full !text-base !font-bold">
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-pink-700">หญิงทั้งหมด (คน)</label>
+              <input id="swal-t-female" type="number" min="0" value="${currentFemale}" placeholder="0" class="swal2-input !m-0 !mt-1 !w-full !text-base !font-bold">
+            </div>
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'บันทึกยอดนักเรียน',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#f97316',
+        preConfirm: () => {
+          const m = document.getElementById('swal-t-male').value;
+          const f = document.getElementById('swal-t-female').value;
+          if (m === '' || f === '' || Number(m) < 0 || Number(f) < 0) {
+            Swal.showValidationMessage('กรุณากรอกจำนวนนักเรียนชายและหญิงให้ถูกต้อง');
+            return false;
+          }
+          return {
+            grade: grade,
+            room: room,
+            totalMale: Number(m),
+            totalFemale: Number(f)
+          };
+        }
+      });
+
+      if (formValues) {
+        Swal.fire({ title: 'กำลังอัปเดตยอดนักเรียน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+          await callApi('saveClassroom', formValues);
+          await loadDashboard(document.getElementById('t-date').value);
+          fetchReportData();
+          Swal.fire({
+            icon: 'success',
+            title: 'อัปเดตยอดนักเรียนสำเร็จ!',
+            text: `${grade}ห้อง${room} : ชาย ${formValues.totalMale} คน, หญิง ${formValues.totalFemale} คน (รวม ${formValues.totalMale + formValues.totalFemale} คน)`,
+            confirmButtonColor: '#f97316'
+          });
+        } catch (err) {
+          Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#f97316' });
+        }
+      }
+    }
+
+    async function submitTeacherAttendance(e) {
+      e.preventDefault();
+      const payload = {
+        date: document.getElementById('t-date').value,
+        grade: document.getElementById('t-grade').value,
+        room: document.getElementById('t-room').value,
+        presentMale: Number(document.getElementById('t-male').value),
+        presentFemale: Number(document.getElementById('t-female').value)
+      };
+
+      Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        await callApi('saveAttendance', payload);
+        await loadDashboard(payload.date);
+        fetchReportData();
+        Swal.fire({
+          icon: 'success',
+          title: 'บันทึกสำเร็จ!',
+          text: `บันทึกข้อมูล ${payload.grade}ห้อง${payload.room} เรียบร้อยแล้ว`,
+          confirmButtonColor: '#f97316'
+        });
+        document.getElementById('t-male').value = '';
+        document.getElementById('t-female').value = '';
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ไม่สามารถบันทึกได้', text: err.message, confirmButtonColor: '#f97316' });
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 6. ADMIN AUTH & ACTIONS
+    // -----------------------------------------------------------------------
+    async function openAdminLogin() {
+      if (appState.isAdmin) {
+        switchView('admin');
+        return;
+      }
+
+      const { value: formValues } = await Swal.fire({
+        title: 'เข้าสู่ระบบแอดมิน',
+        html: `
+          <div class="space-y-3 text-left mt-2">
+            <div>
+              <label class="text-xs font-medium text-slate-600">ชื่อผู้ใช้ (Username)</label>
+              <input id="swal-user" class="swal2-input !m-0 !mt-1 !w-full !text-sm" placeholder="admin">
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-600">รหัสผ่าน (Password)</label>
+              <input id="swal-pass" type="password" class="swal2-input !m-0 !mt-1 !w-full !text-sm" placeholder="••••">
+            </div>
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'เข้าสู่ระบบ',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#f97316',
+        preConfirm: () => {
+          return {
+            username: document.getElementById('swal-user').value,
+            password: document.getElementById('swal-pass').value
+          };
+        }
+      });
+
+      if (formValues) {
+        Swal.fire({ title: 'กำลังตรวจสอบสิทธิ์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+          await callApi('adminLogin', formValues);
+          appState.isAdmin = true;
+          Swal.close();
+          switchView('admin');
+        } catch (err) {
+          Swal.fire({ icon: 'error', title: 'เข้าสู่ระบบไม่สำเร็จ', text: err.message, confirmButtonColor: '#f97316' });
+        }
+      }
+    }
+
+    function logoutAdmin() {
+      appState.isAdmin = false;
+      switchView('dashboard');
+    }
+
+    async function submitSystemSettings(e) {
+      e.preventDefault();
+      const term = document.getElementById('adm-term').value;
+      const academicYear = document.getElementById('adm-year').value;
+
+      Swal.fire({ title: 'กำลังบันทึกการตั้งค่า...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        await callApi('saveSettings', { term, academicYear });
+        await loadDashboard(document.getElementById('dashboard-date').value);
+        Swal.fire({ icon: 'success', title: 'อัปเดตภาคเรียน/ปีการศึกษาแล้ว', confirmButtonColor: '#f97316' });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#f97316' });
+      }
+    }
+
+    async function submitClassroomData(e) {
+      e.preventDefault();
+      const payload = {
+        grade: document.getElementById('adm-grade').value,
+        room: document.getElementById('adm-room').value,
+        totalMale: Number(document.getElementById('adm-male').value),
+        totalFemale: Number(document.getElementById('adm-female').value)
+      };
+
+      Swal.fire({ title: 'กำลังบันทึกข้อมูลห้องเรียน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        await callApi('saveClassroom', payload);
+        await loadDashboard(document.getElementById('dashboard-date').value);
+        Swal.fire({ icon: 'success', title: 'บันทึกข้อมูลห้องเรียนสำเร็จ', confirmButtonColor: '#f97316' });
+        document.getElementById('adm-male').value = '';
+        document.getElementById('adm-female').value = '';
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#f97316' });
+      }
+    }
+
+    function renderAdminClassroomTable() {
+      const tbody = document.getElementById('adm-classroom-table');
+      if (!appState.classrooms.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">ยังไม่มีข้อมูลห้องเรียน</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = appState.classrooms.map(c => `
+        <tr class="hover:bg-orange-50/40">
+          <td class="py-2.5 px-3 font-medium">${c.grade}ห้อง${c.room}</td>
+          <td class="py-2.5 px-2 text-center text-blue-600">${c.totalMale}</td>
+          <td class="py-2.5 px-2 text-center text-pink-600">${c.totalFemale}</td>
+          <td class="py-2.5 px-2 text-center font-bold">${c.totalStudents}</td>
+          <td class="py-2.5 px-3 text-right">
+            <button onclick="deleteClassroom('${c.grade}', '${c.room}')" class="text-rose-500 hover:text-rose-700 text-xs font-medium">ลบ</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function deleteClassroom(grade, room) {
+      const res = await Swal.fire({
+        title: `ลบข้อมูล ${grade}ห้อง${room}?`,
+        text: "ยืนยันการลบข้อมูลนักเรียนของห้องนี้",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'ลบข้อมูล',
+        cancelButtonText: 'ยกเลิก'
+      });
+      if (res.isConfirmed) {
+        await callApi('deleteClassroom', { grade, room });
+        await loadDashboard(document.getElementById('dashboard-date').value);
+        Swal.fire({ icon: 'success', title: 'ลบข้อมูลเรียบร้อย', confirmButtonColor: '#f97316' });
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 7. REPORTS & EXPORT (PDF / GOOGLE DOCS)
+    // -----------------------------------------------------------------------
+    function setReportType(type) {
+      appState.reportType = type;
+      ['daily', 'monthly', 'yearly'].forEach(t => {
+        const btn = document.getElementById(`rep-tab-${t}`);
+        const inp = document.getElementById(`rep-filter-${t}`);
+        if (t === type) {
+          btn.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-orange-500 text-white";
+          inp.classList.remove('hidden');
+        } else {
+          btn.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-orange-600";
+          inp.classList.add('hidden');
+        }
+      });
+      fetchReportData();
+    }
+
+    function getActiveReportFilter() {
+      const t = appState.reportType;
+      return document.getElementById(`rep-filter-${t}`).value;
+    }
+
+    async function fetchReportData() {
+      const type = appState.reportType;
+      const filterValue = getActiveReportFilter();
+      const tbody = document.getElementById('report-table-body');
+      tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>`;
+
+      try {
+        const res = await callApi('getReports', { type, filterValue });
+        if (!res.rows || res.rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">ไม่พบข้อมูลในช่วงเวลาที่เลือก</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = res.rows.map(r => `
+          <tr class="hover:bg-orange-50/40">
+            <td class="py-2.5 px-3 font-medium text-slate-800">
+              ${r.label}
+              ${r.status ? `<span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${r.status === 'บันทึกแล้ว' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${r.status}</span>` : ''}
+            </td>
+            <td class="py-2.5 px-2.5 text-center">${r.totalStudents}</td>
+            <td class="py-2.5 px-2.5 text-center text-blue-600">${r.presentMale}</td>
+            <td class="py-2.5 px-2.5 text-center text-pink-600">${r.presentFemale}</td>
+            <td class="py-2.5 px-2.5 text-center font-bold text-emerald-600">${r.totalPresent}</td>
+            <td class="py-2.5 px-2.5 text-center text-rose-500">${r.absent}</td>
+            <td class="py-2.5 px-3 text-center font-bold text-orange-600">${r.percentage}%</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-rose-500">${err.message}</td></tr>`;
+      }
+    }
+
+    async function exportReport(format) {
+      const type = appState.reportType;
+      const filterValue = getActiveReportFilter();
+
+      Swal.fire({
+        title: `กำลังสร้างเอกสาร ${format.toUpperCase()}...`,
+        text: 'จัดรูปแบบ A4 แนวตั้ง ฟอนต์ Sarabun และบันทึกลง Google Drive',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      try {
+        const res = await callApi('exportDocument', { format, type, filterValue });
+        Swal.fire({
+          icon: 'success',
+          title: 'ส่งออกเอกสารสำเร็จ!',
+          html: `
+            <p class="text-xs sm:text-sm text-slate-600 mb-3">บันทึกไฟล์ไว้ในโฟลเดอร์ <b>${res.folderPath}</b></p>
+            <a href="${res.url}" target="_blank" class="inline-block px-5 py-2.5 bg-orange-500 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-orange-600">
+              เปิดดูเอกสาร (${res.name})
+            </a>
+          `,
+          showConfirmButton: false,
+          showCloseButton: true
+        });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ส่งออกเอกสารไม่สำเร็จ', text: err.message, confirmButtonColor: '#f97316' });
+      }
+    }
+  </script>
+</body>
+</html>
